@@ -13,6 +13,13 @@ import {
   hasLocationPermissionBg,
 } from '../utils/myFunction';
 
+type OnInterval = (val: number) => void;
+
+interface Config {
+  onInterval?: OnInterval;
+  disableOnMount?: boolean;
+}
+
 const defaultConfig: Notification = {
   id: 'trackingloc',
   title: 'Tracking your Location',
@@ -97,7 +104,8 @@ const postTracking = (counter: number) => {
   );
 };
 
-const useTracking = (onInterval?: (val: number) => void) => {
+const useTracking = (config?: Config) => {
+  const {onInterval, disableOnMount} = config || {};
   const {intervalId, setIntervalId} = useContext(MainContext);
 
   const savedOnInterval = useRef<(val: number) => void>(() => {});
@@ -168,23 +176,25 @@ const useTracking = (onInterval?: (val: number) => void) => {
       }
     };
 
-    createChannel().then(() => startForegroundService());
+    if (!disableOnMount) {
+      createChannel().then(() => startForegroundService());
 
-    const unsubscribeNotifee = notifee.onForegroundEvent(({type, detail}) => {
-      switch (type) {
-        case EventType.DISMISSED:
-          console.log('DISMISS Notifee FG: ', detail.notification?.title);
-          break;
-        case EventType.PRESS:
-          console.log('PRESS Notifee FG: ', detail.notification?.title);
-          break;
-      }
-    });
+      const unsubscribeNotifee = notifee.onForegroundEvent(({type, detail}) => {
+        switch (type) {
+          case EventType.DISMISSED:
+            console.log('DISMISS Notifee FG: ', detail.notification?.title);
+            break;
+          case EventType.PRESS:
+            console.log('PRESS Notifee FG: ', detail.notification?.title);
+            break;
+        }
+      });
 
-    return () => {
-      unsubscribeNotifee();
-    };
-  }, [setIntervalId]);
+      return () => {
+        unsubscribeNotifee();
+      };
+    }
+  }, [setIntervalId, disableOnMount]);
   return {startForeground, stopForeground};
 };
 

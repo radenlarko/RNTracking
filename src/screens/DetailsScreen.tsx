@@ -11,9 +11,9 @@ const DetailsScreen = ({navigation}: Props) => {
   const {intervalId} = useContext(MainContext);
   const [counterVal, setCounterVal] = useState(0);
 
-  const {startForeground, stopForeground} = useTracking(val =>
-    setCounterVal(val),
-  );
+  const {startForeground, stopForeground} = useTracking({
+    onInterval: val => setCounterVal(val),
+  });
 
   return (
     <View style={styles.container}>
